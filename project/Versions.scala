@@ -9,4 +9,12 @@ object Versions {
   lazy val AkkaHttp = "10.0.10"
 
   lazy val MySqlConnector = "6.0.6"
+
+  lazy val EndPoints = "0.3.0"
+
+  lazy val Circe = "0.8.0"
+
+  lazy val Monix = "2.3.0"
+
+  lazy val ScalajHttp = "2.3.0"
 }

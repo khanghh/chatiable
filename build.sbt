@@ -11,4 +11,11 @@ libraryDependencies ++= Seq(
   "com.typesafe.slick" % "slick_2.12" % Versions.Slick,
   "com.typesafe.slick" % "slick-hikaricp_2.12" % Versions.Slick,
   "mysql" % "mysql-connector-java" % Versions.MySqlConnector,
+  "org.julienrf" %% "endpoints-algebra" % Versions.EndPoints,
+  "org.julienrf" %% "endpoints-algebra-circe" % Versions.EndPoints,
+  "org.julienrf" % "endpoints-akka-http-server_2.12" % Versions.EndPoints,
+  "io.circe" % "circe-parser_2.12" % Versions.Circe,
+  "io.circe" % "circe-generic_2.12" % Versions.Circe,
+  "io.circe" % "circe-core_2.12" % Versions.Circe,
+  "io.circe" % "circe-generic-extras_2.12" % Versions.Circe,
 )
