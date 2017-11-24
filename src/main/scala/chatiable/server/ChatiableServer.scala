@@ -8,11 +8,13 @@ import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.stream.ActorMaterializer
-import chatiable.server.handler.DefaultAnswerHandler
+import chatiable.server.handler.ChatMaleHandler
 import chatiable.server.handler.NewChatHandler
 import chatiable.server.handler.PrintParameterHandler
 import chatiable.model.chatfuel.Messages
 import chatiable.model.chatfuel.Messages.Message
+import chatiable.server.handler.ChatBotHandler
+import chatiable.server.handler.ChatFemaleHandler
 import io.circe.Printer
 
 import scala.io.StdIn
@@ -23,8 +25,11 @@ object ChatiableServer extends App {
     implicit val materializer = ActorMaterializer()
     implicit val executionContext = actorSystem.dispatcher
 
-    lazy val defaultAnswerHandler = new DefaultAnswerHandler
+    lazy val defaultAnswerHandler = new ChatMaleHandler
     lazy val newChatHandler = new NewChatHandler
+    lazy val chatMaleHandler = new ChatMaleHandler
+    lazy val chatFemaleHandler = new ChatFemaleHandler
+    lazy val chatBotHandler = new ChatBotHandler
     lazy val printParameterHandler = new PrintParameterHandler
     lazy val exceptionHandler = ExceptionHandler {
       case throwble: Throwable =>
@@ -34,6 +39,9 @@ object ChatiableServer extends App {
 
     lazy val routeHandlers = Seq(
       defaultAnswerHandler,
+      chatMaleHandler,
+      chatFemaleHandler,
+      chatBotHandler,
       newChatHandler
     )
 

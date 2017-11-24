@@ -6,25 +6,24 @@ import chatiable.model.chatfuel.Messages
 import chatiable.model.chatfuel.Messages.Message
 import io.circe.Printer
 
-class NewChatHandler extends RouteHandler {
-  def route: Route =
-    path("newchat") {
+class ChatBotHandler extends RouteHandler {
+  override def route: Route =
+    path("bot") {
       get {
-        println("new chat")
         parameters(
-          "selected gender".as[String],
+          "text".as[String],
           "last name".as[String],
           "first name".as[String],
           "messenger user id".as[String],
           "gender".as[String]
-        ) { (selectedgender, lastname, firstName, id, gender) =>
-          selectedgender match {
+        ) { (text, lastname, firstName, id, gender) =>
+          text match {
             case _ =>
               val data = Printer.spaces2.copy(dropNullKeys = true).pretty(
                 Messages.encoder.apply(
                   Messages(
                     List(
-                      Message(None, Some(s"Đã chọn ${selectedgender}")),
+                      Message(None, Some("Đang chat với bot")),
                     )
                   )
                 )
