@@ -14,6 +14,8 @@ object Versions {
 
   lazy val Circe = "0.8.0"
 
+  lazy val AkkaHttpCirce = "1.18.0"
+
   lazy val Monix = "2.3.0"
 
   lazy val ScalajHttp = "2.3.0"

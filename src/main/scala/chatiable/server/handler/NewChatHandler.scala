@@ -1,12 +1,15 @@
 package chatiable.server.handler
 
+import akka.actor.ActorRef
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
-import chatiable.model.chatfuel.Messages
-import chatiable.model.chatfuel.Messages.Message
-import io.circe.Printer
+import chatiable.model.MessengerUser
+import chatiable.server.user.PVPChatServer.StartPair
+import chatiable.service.chatfuel.ChatfuelApi
 
-class NewChatHandler extends RouteHandler {
+class NewChatHandler(
+  pvpChatServer: ActorRef
+) extends RouteHandler {
   def route: Route =
     path("newchat") {
       get {
@@ -16,20 +19,25 @@ class NewChatHandler extends RouteHandler {
           "last name".as[String],
           "first name".as[String],
           "messenger user id".as[String],
-          "gender".as[String]
-        ) { (selectedgender, lastname, firstName, id, gender) =>
-          selectedgender match {
+          "gender".as[String],
+        ) { (selectedgender, lastName, firstName, userId, gender) =>
+          val user = MessengerUser(
+            userId = userId,
+            firstName = firstName,
+            lastName = lastName,
+            gender = gender.equals("male"),
+          )
+          selectedgender.toLowerCase match {
+            case "boy" =>
+              user.selectedGender = true
+              pvpChatServer ! StartPair(user)
+              complete(ChatfuelApi.sendTextMessage(s"Đang tìm kiếm. Vui lòng chờ chút :)"))
+            case "girl" =>
+              user.selectedGender = false
+              pvpChatServer ! StartPair(user)
+              complete(ChatfuelApi.sendTextMessage(s"Đang tìm kiếm. Vui lòng chờ chút :)"))
             case _ =>
-              val data = Printer.spaces2.copy(dropNullKeys = true).pretty(
-                Messages.encoder.apply(
-                  Messages(
-                    List(
-                      Message(None, Some(s"Đã chọn ${selectedgender}")),
-                    )
-                  )
-                )
-              )
-              complete(data)
+              complete(ChatfuelApi.redirect("Default answer"))
           }
         }
       }

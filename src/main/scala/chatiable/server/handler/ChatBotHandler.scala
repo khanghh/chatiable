@@ -2,8 +2,9 @@ package chatiable.server.handler
 
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
-import chatiable.model.chatfuel.Messages
-import chatiable.model.chatfuel.Messages.Message
+import chatiable.service.chatfuel.ChatfuelApi
+import chatiable.service.chatfuel.Messages
+import chatiable.service.chatfuel.Messages.Message
 import io.circe.Printer
 
 class ChatBotHandler extends RouteHandler {
@@ -12,23 +13,13 @@ class ChatBotHandler extends RouteHandler {
       get {
         parameters(
           "text".as[String],
-          "last name".as[String],
-          "first name".as[String],
           "messenger user id".as[String],
-          "gender".as[String]
-        ) { (text, lastname, firstName, id, gender) =>
+        ) { (text, gender) =>
           text match {
+            case "bye" =>
+              complete(ChatfuelApi.sendSilent)
             case _ =>
-              val data = Printer.spaces2.copy(dropNullKeys = true).pretty(
-                Messages.encoder.apply(
-                  Messages(
-                    List(
-                      Message(None, Some("Đang chat với bot")),
-                    )
-                  )
-                )
-              )
-              complete(data)
+              complete(ChatfuelApi.sendTextMessage("Đang chat với bot"))
           }
         }
       }

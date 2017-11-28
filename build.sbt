@@ -18,4 +18,5 @@ libraryDependencies ++= Seq(
   "io.circe" % "circe-generic_2.12" % Versions.Circe,
   "io.circe" % "circe-core_2.12" % Versions.Circe,
   "io.circe" % "circe-generic-extras_2.12" % Versions.Circe,
+  "de.heikoseeberger" %% "akka-http-circe" % Versions.AkkaHttpCirce
 )
