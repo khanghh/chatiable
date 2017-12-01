@@ -1,12 +1,7 @@
 package chatiable.server.user
 
-import java.net.URL
-
 import akka.actor.Actor
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.HttpExt
-import akka.http.scaladsl.model.Uri
-import chatiable.model.MessengerUser
+import chatiable.model.user.MessengerUser
 import chatiable.server.user.PVPChatServer._
 import chatiable.service.facebook.FBHttpClient
 import chatiable.service.facebook.FBPageApi
@@ -14,69 +9,68 @@ import chatiable.service.facebook.FBPageApi
 import scala.collection.mutable
 class PVPChatServer()(implicit fbHttpClient: FBHttpClient) extends Actor {
 
+  private val watingUserList: mutable.ListBuffer[MessengerUser] = mutable.ListBuffer[MessengerUser]()
+
   def receive: Receive = {
     case StartPair(user: MessengerUser) =>
-      onlineUserList.values.find(chatUser =>
-        chatUser.chatFriend == null
-        && chatUser.gender == user.selectedGender
-        && chatUser.selectedGender == user.gender
+      watingUserList.find(watingUser =>
+        watingUser.gender.equals(user.selectedGender)
+        && watingUser.selectedGender.equals(user.gender)
       ) match {
         case Some(friend) =>
-          user.chatFriend = friend
-          friend.chatFriend = user
+          userChatPairs += ((user.userId, friend.userId))
           FBPageApi.sendTextMessage(user.userId, "hi")
           FBPageApi.sendTextMessage(friend.userId, "hi")
-          println(s"Pair: ${user.firstName} <-> ${friend.firstName}")
+          println(s"Pair: ${user.userId} <-> ${friend.userId}")
+          watingUserList -= friend
         case None =>
-          println("no user")
+          watingUserList += user
       }
-      onlineUserList += (user.userId -> user)
-    case SendChatMessage(userId, message) =>
-      if (onlineUserList.contains(userId)) {
-        val user: MessengerUser = onlineUserList(userId)
-        if (user.chatFriend != null) {
-          val friend: MessengerUser = user.chatFriend
-          message match {
-            case url if (message.matches("\\S+") && (message.startsWith("http://") || message.startsWith("https://")))  =>
-              url.split('?').apply(0).split('.').lastOption match {
-                case Some(ext) =>
-                  ext match {
-                    case "png" | "jpg" | "gif" =>
-                      FBPageApi.sendAttachment(friend.userId, "image", url)
-                    case "avi" | "mp4" =>
-                      FBPageApi.sendAttachment(friend.userId, "video", url)
-                    case "mp3" | "wav" =>
-                      FBPageApi.sendAttachment(friend.userId, "audio", url)
-                    case _ =>
-                      FBPageApi.sendAttachment(friend.userId, "file", url)
+    case SendChatMessage(senderId, message) =>
+      watingUserList.find(_.userId.equals(senderId)) match {
+        case Some(user) =>
+          FBPageApi.sendTextMessage(senderId, "Đang tìm kiếm vui lòng chờ chút :)")
+        case None =>
+          userChatPairs.find(pair => pair._1.equals(senderId) || pair._2.equals(senderId)) match {
+            case Some((userId1, userId2)) =>
+              val receiverId = if (senderId.equals(userId1)) userId2 else userId1
+              message match {
+                case url if (message.matches("\\S+") && (message.startsWith("http://") || message.startsWith("https://"))) =>
+                  url.split('?').apply(0).split('.').lastOption match {
+                    case Some(ext) =>
+                      ext match {
+                        case "png" | "jpg" | "gif" =>
+                          FBPageApi.sendAttachment(receiverId, "image", url)
+                        case "avi" | "mp4" =>
+                          FBPageApi.sendAttachment(receiverId, "video", url)
+                        case "mp3" | "wav" =>
+                          FBPageApi.sendAttachment(receiverId, "audio", url)
+                        case _ =>
+                          FBPageApi.sendAttachment(receiverId, "file", url)
+                      }
+                    case None => FBPageApi.sendTextMessage(receiverId, message)
                   }
-                case None => FBPageApi.sendTextMessage(friend.userId, message)
+                case _ =>
+                  FBPageApi.sendTextMessage(receiverId, message)
               }
-            case _ =>
-              FBPageApi.sendTextMessage(friend.userId, message)
+            case None =>
+//              if (!message.equals("bye")) {
+//                FBPageApi.sendTextMessage(senderId, "Cuộc trò chuyện đã kết thúc. Chat \"bye\" để thoát.")
+//              }
           }
-        } else {
-          FBPageApi.sendTextMessage(userId, "Đang tìm kiếm vui lòng chờ chút :)")
-        }
       }
-    case UserEndChat(userId) =>
-      if (onlineUserList.contains(userId)) {
-        val user: MessengerUser = onlineUserList(userId)
-        onlineUserList.remove(user.userId)
-        if (user.chatFriend != null) {
-          val friend: MessengerUser = user.chatFriend
-          onlineUserList.remove(friend.userId)
-        }
+    case EndChat(userId) =>
+      userChatPairs.find(pair => pair._1.equals(userId) || pair._2.equals(userId)) match {
+        case Some(pair) => userChatPairs -= pair
+        case None =>
       }
   }
-
-  def getUserByUserId(userId: String): MessengerUser = onlineUserList.apply(userId)
 }
 
 object PVPChatServer {
-  private val onlineUserList: mutable.Map[String, MessengerUser] = mutable.Map[String, MessengerUser]()
   final case class StartPair(user: MessengerUser)
   final case class SendChatMessage(userId: String, message: String)
-  final case class UserEndChat(userId: String)
-  def getUserById(userId: String): Option[MessengerUser] = onlineUserList.get(userId)
+  final case class EndChat(userId: String)
+  private val userChatPairs: mutable.ListBuffer[(String, String)] = mutable.ListBuffer[(String, String)]()
+  def getPairByUserId(userId: String): Option[(String, String)] = userChatPairs.find(pair => pair._1.equals(userId) || pair._2.equals(userId))
 }

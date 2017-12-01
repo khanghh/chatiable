@@ -1,25 +1,28 @@
 package chatiable.server.handler
 
+import akka.actor.ActorRef
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
+import chatiable.server.bot.BotChatServer.HandleMessage
 import chatiable.service.chatfuel.ChatfuelApi
-import chatiable.service.chatfuel.Messages
-import chatiable.service.chatfuel.Messages.Message
-import io.circe.Printer
+import chatiable.service.facebook.FBPageApi
 
-class ChatBotHandler extends RouteHandler {
+class ChatBotHandler(
+  botChatServer: ActorRef
+) extends RouteHandler {
   override def route: Route =
     path("bot") {
       get {
         parameters(
           "text".as[String],
           "messenger user id".as[String],
-        ) { (text, gender) =>
+        ) { (text, userId) =>
           text match {
             case "bye" =>
               complete(ChatfuelApi.sendSilent)
             case _ =>
-              complete(ChatfuelApi.sendTextMessage("Đang chat với bot"))
+              botChatServer ! HandleMessage(userId, text)
+              complete(ChatfuelApi.sendSilent)
           }
         }
       }

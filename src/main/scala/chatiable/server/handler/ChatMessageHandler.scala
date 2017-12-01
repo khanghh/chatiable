@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 import chatiable.server.user.PVPChatServer
 import chatiable.server.user.PVPChatServer.SendChatMessage
-import chatiable.server.user.PVPChatServer.UserEndChat
+import chatiable.server.user.PVPChatServer.EndChat
 import chatiable.service.chatfuel.ChatfuelApi
 
 class ChatMessageHandler(
@@ -22,12 +22,12 @@ class ChatMessageHandler(
           text match {
             case "bye" =>
               pvpChatServer ! SendChatMessage(userId, text)
-              pvpChatServer ! UserEndChat(userId)
+              pvpChatServer ! EndChat(userId)
               complete(ChatfuelApi.sendSilent)
             case _ =>
-              PVPChatServer.getUserById(userId) match {
-                case Some(messageUser) =>
-                  pvpChatServer ! SendChatMessage(userId, text)
+              pvpChatServer ! SendChatMessage(userId, text)
+              PVPChatServer.getPairByUserId(userId) match {
+                case Some(pair) =>
                   complete(ChatfuelApi.sendSilent)
                 case None =>
                   complete(ChatfuelApi.redirect("Default answer"))

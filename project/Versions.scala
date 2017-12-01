@@ -19,4 +19,6 @@ object Versions {
   lazy val Monix = "2.3.0"
 
   lazy val ScalajHttp = "2.3.0"
+
+  lazy val Slf4jNop = "1.7.25"
 }
