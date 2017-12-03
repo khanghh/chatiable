@@ -7,10 +7,13 @@ import io.circe.generic.semiauto.deriveEncoder
 import io.circe.generic.semiauto.deriveDecoder
 import circe._
 
+abstract class FBRequest
+abstract class FBResponse
+
 final case class FBSendMessageRequest(
   recipient: FBSendMessageRequest.ContactInfo,
   message: FBSendMessageRequest.Message
-)
+) extends FBRequest
 
 object FBSendMessageRequest {
 
@@ -57,7 +60,7 @@ final case class FBSendMessageRespone(
   recipientId: String,
   messageId: String,
   attachmentId: Option[String]
-)
+) extends FBResponse
 
 object FBSendMessageRespone {
   implicit val decoder: Decoder[FBSendMessageRespone] = deriveDecoder
@@ -65,4 +68,14 @@ object FBSendMessageRespone {
 
 final case class FBSendMessageException() extends Exception {
   def message: String = "Failed to send messages from Facebook page."
+}
+
+final case class FBGetUserInfoResponse(
+  id: String,
+  name: String,
+  gender: String
+) extends FBResponse
+
+object FBGetUserInfoResponse {
+  implicit val decoder: Decoder[FBGetUserInfoResponse] = deriveDecoder
 }

@@ -43,7 +43,7 @@ object ChatfuelApi {
     )
   }
 
-  def sendMessages(messages: Message*): String = {
+  def sendMessages(messages: Seq[Message]): String = {
     Printer.noSpaces.copy(dropNullKeys = true).pretty(
       Messages.encoder.apply(
         Messages(messages.toList)

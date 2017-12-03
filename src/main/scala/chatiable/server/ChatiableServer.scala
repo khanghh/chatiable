@@ -9,15 +9,22 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.stream.ActorMaterializer
+import chatiable.persistence.repository.BotActionRepository
+import chatiable.persistence.repository.BotReplyRepository
+import chatiable.persistence.repository.MessengerUserRepository
 import chatiable.server.bot.BotChatServer
-import chatiable.server.handler.ChatBotHandler
+import chatiable.server.bot.BotReplyServer
 import chatiable.server.handler.ChatMessageHandler
-import chatiable.server.handler.NewChatHandler
 import chatiable.server.handler.PrintParameterHandler
-import chatiable.server.user.PVPChatServer
+import chatiable.service.FBPageService
 import chatiable.service.facebook.FBHttpClient
+import chatiable.service.facebook.FBPageApi
+import chatiable.service.user.UserService
 import slick.jdbc.MySQLProfile.api._
+import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 import scala.io.StdIn
 
 object ChatiableServer extends App {
@@ -26,17 +33,21 @@ object ChatiableServer extends App {
     implicit val materializer = ActorMaterializer()
     implicit val executionContext = actorSystem.dispatcher
     implicit val http: HttpExt = Http()
+    val accessToken = "EAACW5Fg5N2IBAGQc9VgSzY6Vwmv41hsVIz8MA7fNzAoUldEcTPvnqIzinGGO1KPVZAk917rg6OZBnTfgRog8m0pwvdhH5pf1qXFLC6HzW7GULHUfJyj04terP5AZAkpOR7uDuPAt5yZBnOsYBngsvszQ6PYJStNgTH6nl2IvTAZDZD"
 
     lazy val database = Database.forConfig("chatiable.mysql")
+    lazy val botReplyRepository = new BotReplyRepository(database)
+    lazy val botActionRepository = new BotActionRepository(database)
+    lazy val messengerUserRepository = new MessengerUserRepository(database)
 
-    val accessToken = "EAACW5Fg5N2IBAGQc9VgSzY6Vwmv41hsVIz8MA7fNzAoUldEcTPvnqIzinGGO1KPVZAk917rg6OZBnTfgRog8m0pwvdhH5pf1qXFLC6HzW7GULHUfJyj04terP5AZAkpOR7uDuPAt5yZBnOsYBngsvszQ6PYJStNgTH6nl2IvTAZDZD"
-    implicit val fbHttpClient: FBHttpClient = new FBHttpClient(accessToken)
-    val pvpChatServer = actorSystem.actorOf(Props(new PVPChatServer), "pvpChatServer")
-    val botChatServer = actorSystem.actorOf(Props(new BotChatServer(database)), "botChatServer")
+    lazy val userService = new UserService(messengerUserRepository)
+    lazy val fBPageService = new FBPageService(accessToken)
 
-    lazy val newChatHandler = new NewChatHandler(pvpChatServer)
-    lazy val chatMessageHandler = new ChatMessageHandler(pvpChatServer)
-    lazy val chatBotHandler = new ChatBotHandler(botChatServer)
+    lazy val botReplyServer = new BotReplyServer(
+      userService,
+      fBPageService
+    )
+//    lazy val chatBotHandler = new ChatBotHandler(botChatServer)
     lazy val printParameterHandler = new PrintParameterHandler
     lazy val exceptionHandler = ExceptionHandler {
       case throwble: Throwable =>
@@ -45,9 +56,7 @@ object ChatiableServer extends App {
     }
 
     lazy val routeHandlers = Seq(
-      chatMessageHandler,
-      chatBotHandler,
-      newChatHandler
+      botReplyServer
     )
 
     lazy val serverRoute = routeHandlers
@@ -63,10 +72,14 @@ object ChatiableServer extends App {
 
     println(s"Server online at http://0.0.0.0:8080/\nPress RETURN to stop...")
 
-//    botChatServer ! CreateTableIfNotExist
-
-//    botChatServer ! TeachBot("123456", "abc", "ấy", 100)
-//    botChatServer ! TeachBot("ngu", "ok", 100)
+//    Await.result(
+//      for {
+//        _ <- botReplyRepository.createSchema
+//        _ <- botActionRepository.createSchema
+//        _ <- messengerUserRepository.createSchema
+//      } yield(),
+//      Duration.Inf
+//    )
 
     StdIn.readLine() // let it run until user presses return
     bindingFuture

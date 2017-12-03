@@ -1,7 +1,6 @@
 
 import java.net.URL
 
-import chatiable.model.bot.BotReply
 
 import scala.concurrent.Await
 import scala.concurrent.Future
@@ -11,7 +10,6 @@ import scala.concurrent.duration.Duration
 import scala.util.Failure
 import scala.collection.mutable
 import scala.util.Random
-
 
 val str = "thời tiết Hà nội như thế nào ?"
 
@@ -26,14 +24,10 @@ str match {
   case _ =>
 }
 
-val random = new Random(System.currentTimeMillis())
-val botReply = BotReply("ask", "rep", 100)
+val lst = List("1", "2", "3")
 
-val replies: List[BotReply] = List()
-try {
-  val sum = replies.map(rep => rep.probabl).sum
-  var rnd = random.nextInt(0)
-} catch {
-  case ex:Throwable => println(ex)
+lst.find(x => x == "1") match {
+  case None => Some(0)
+  case _ =>
 }
 

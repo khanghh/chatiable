@@ -11,8 +11,8 @@ object FBPageApi {
   def sendTextMessage(
     userId: String,
     message: String
-  )(implicit fbHttpClient: FBHttpClient): Future[String] = {
-    fbHttpClient.request(
+  )(implicit fbHttpClient: FBHttpClient): Future[FBSendMessageRespone] = {
+    fbHttpClient.request[FBSendMessageRequest, FBSendMessageRespone](
       HttpMethods.POST,
       "me/messages",
       FBSendMessageRequest(
@@ -26,8 +26,8 @@ object FBPageApi {
     userId: String,
     fileType: String,
     url: String
-  )(implicit fbHttpClient: FBHttpClient): Future[String] = {
-    fbHttpClient.request(
+  )(implicit fbHttpClient: FBHttpClient): Future[FBSendMessageRespone] = {
+    fbHttpClient.request[FBSendMessageRequest, FBSendMessageRespone](
       HttpMethods.POST,
       "me/messages",
       FBSendMessageRequest(

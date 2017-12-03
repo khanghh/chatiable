@@ -23,10 +23,7 @@ final class BotReplyRepository(
     )).recoverWith{
       case uniqeEx: SQLIntegrityConstraintViolationException =>
         Future.successful(println("record already exists !"))
-      case ex => Future.failed{
-        ex.printStackTrace()
-        ex
-      }
+      case ex => Future.failed(ex)
     }
   }
 
@@ -36,6 +33,12 @@ final class BotReplyRepository(
 
   def get(ask: String): Future[Seq[BotReply]] = {
     database.run(getQuery(ask).result)
+  }
+
+  def createSchema: Future[Unit] = {
+    database.run(
+      BotReplies.query.schema.create
+    )
   }
 
 }
