@@ -1,11 +1,13 @@
 package chatiable.model.user
 
+import chatiable.model.user.request.UserRequest
+
 final case class MessengerUser(
   userId: String,
   name: String,
   gender: Boolean,
-  var friendId: String = null,
   var lastMgsMilis: Long = 0
 ) {
-  var selectedGender: Boolean = false
+
+  var request: UserRequest = _
 }

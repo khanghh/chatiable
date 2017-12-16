@@ -55,11 +55,6 @@ final class FBHttpClient(
     val entity = response.entity.withContentType(MediaTypes.`application/json`)
     val unmarshal = Unmarshal(entity)
     unmarshal.to[B]
-//    Task.deferFuture(unmarshal.to[B]).onErrorRecoverWith {
-//      case exception: Throwable =>
-//        exception.printStackTrace()
-//        Task.raiseError(exception)
-//    }
   }
 
   private[this] def request(request: HttpRequest): Future[HttpResponse] = {

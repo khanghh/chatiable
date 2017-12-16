@@ -23,7 +23,7 @@ final class BotReplyRepository(
     )).recoverWith{
       case uniqeEx: SQLIntegrityConstraintViolationException =>
         Future.successful(println("record already exists !"))
-      case ex => Future.failed(ex)
+      case ex => Future.successful(println(ex))
     }
   }
 

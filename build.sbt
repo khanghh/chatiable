@@ -19,5 +19,5 @@ libraryDependencies ++= Seq(
   "io.circe" % "circe-core_2.12" % Versions.Circe,
   "io.circe" % "circe-generic-extras_2.12" % Versions.Circe,
   "de.heikoseeberger" %% "akka-http-circe" % Versions.AkkaHttpCirce,
-  "org.slf4j" % "slf4j-nop" % Versions.Slf4jNop,
+  "org.slf4j" % "slf4j-nop" % Versions.Slf4jNop
 )

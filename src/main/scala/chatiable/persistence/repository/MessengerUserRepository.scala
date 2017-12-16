@@ -16,9 +16,9 @@ final class MessengerUserRepository(
   database: Database
 ) {
 
-  def add(messengerUser: MessengerUser): Future[Unit] = {
+  def insertOrUpdate(user: MessengerUser): Future[_] = {
     database.run(DBIO.seq(
-       MessengerUsers.query += messengerUser
+       MessengerUsers.query.insertOrUpdate(user)
     )).recoverWith{
       case uniqeEx: SQLIntegrityConstraintViolationException =>
         Future.successful(println("record already exists !"))
@@ -34,7 +34,13 @@ final class MessengerUserRepository(
     database.run(getQuery(userId).result.headOption)
   }
 
-  def createSchema: Future[Unit] = {
+  def update(user: MessengerUser): Future[_] = {
+    database.run(
+      MessengerUsers.query.update(user)
+    )
+  }
+
+  def createSchema: Future[_] = {
     database.run(
       MessengerUsers.query.schema.create
     )

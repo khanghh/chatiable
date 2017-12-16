@@ -10,9 +10,8 @@ class MessengerUsers(tag: Tag) extends Table[MessengerUser](tag, "MessengerUsers
   def id = column[String]("Id", O.PrimaryKey, O.Length(idMaxLength))
   def fullName = column[String]("FullName", O.Length(fullNameMaxLength))
   def gender = column[Boolean]("Gender")
-  def friendId = column[String]("FriendId", O.Length(idMaxLength))
   def lastMsg = column[Long]("LastMessage")
-  def `*`: ProvenShape[MessengerUser] = (id, fullName, gender, friendId, lastMsg) <> (MessengerUser.tupled, MessengerUser.unapply)
+  def `*`: ProvenShape[MessengerUser] = (id, fullName, gender, lastMsg) <> (MessengerUser.tupled, MessengerUser.unapply)
 }
 
 object MessengerUsers {

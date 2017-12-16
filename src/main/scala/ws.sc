@@ -1,33 +1,39 @@
 
 import java.net.URL
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
+import chatiable.model.user.MessengerUser
+import chatiable.model.user.request.pvpchat.PVPChatRequest
+import chatiable.service.facebook.FBSendQuickRepliesMessageRequest
+import io.circe.generic.extras.Configuration
 
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.util.Success
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 import scala.util.Failure
-import scala.collection.mutable
-import scala.util.Random
 
-val str = "thời tiết Hà nội như thế nào ?"
+val list  = List()
 
-val pattern = """thời tiết (.+) như thế nào \?""".r
-
-str match {
-  case pattern(place, time) =>
-    println(place)
-    println(time)
-  case pattern(place) =>
-    println(place)
-  case _ =>
+val thread1 = new Thread {
+  override def run: Unit = {
+    list.synchronized {
+      Thread.sleep(5000)
+      println("1")
+    }
+  }
 }
 
-val lst = List("1", "2", "3")
-
-lst.find(x => x == "1") match {
-  case None => Some(0)
-  case _ =>
+val thread2 = new Thread {
+  override def run: Unit = {
+    list.synchronized {
+      println("2")
+    }
+  }
 }
 
+thread1.start()
+thread2.start()

@@ -1,9 +1,6 @@
 package chatiable.service.chatfuel
 
 import chatiable.service.chatfuel.Messages.Message
-import chatiable.service.chatfuel.Messages.Message.Attachment
-import chatiable.service.chatfuel.Messages.Message.Attachment.Payload
-import io.circe.Printer
 
 final class ChatfuelService() {
   def sendTextMessage(text: String): String = {

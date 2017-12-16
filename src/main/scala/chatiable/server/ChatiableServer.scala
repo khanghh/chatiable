@@ -1,7 +1,11 @@
 package chatiable.server
 
+import java.time.Clock
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+
 import akka.actor.ActorSystem
-import akka.actor.Props
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.HttpExt
 import akka.http.scaladsl.model.StatusCode
@@ -9,41 +13,45 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.stream.ActorMaterializer
-import chatiable.persistence.repository.BotActionRepository
 import chatiable.persistence.repository.BotReplyRepository
 import chatiable.persistence.repository.MessengerUserRepository
-import chatiable.server.bot.BotChatServer
-import chatiable.server.bot.BotReplyServer
-import chatiable.server.handler.ChatMessageHandler
+import chatiable.persistence.repository.RequestPatternRepository
+import chatiable.server.bot.BotServer
 import chatiable.server.handler.PrintParameterHandler
 import chatiable.service.FBPageService
-import chatiable.service.facebook.FBHttpClient
-import chatiable.service.facebook.FBPageApi
+import chatiable.service.bot.BotReplyService
+import chatiable.service.bot.UserRequsetService
+import chatiable.service.user.PVPChatService
 import chatiable.service.user.UserService
 import slick.jdbc.MySQLProfile.api._
-import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Await
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration.Duration
 import scala.io.StdIn
 
 object ChatiableServer extends App {
   override def main(args: Array[String]): Unit = {
-    implicit val actorSystem = ActorSystem("chatiable")
-    implicit val materializer = ActorMaterializer()
-    implicit val executionContext = actorSystem.dispatcher
+    implicit val actorSystem: ActorSystem = ActorSystem("chatiable")
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit val executionContext: ExecutionContextExecutor = actorSystem.dispatcher
     implicit val http: HttpExt = Http()
-    val accessToken = "EAACW5Fg5N2IBAGQc9VgSzY6Vwmv41hsVIz8MA7fNzAoUldEcTPvnqIzinGGO1KPVZAk917rg6OZBnTfgRog8m0pwvdhH5pf1qXFLC6HzW7GULHUfJyj04terP5AZAkpOR7uDuPAt5yZBnOsYBngsvszQ6PYJStNgTH6nl2IvTAZDZD"
 
     lazy val database = Database.forConfig("chatiable.mysql")
-    lazy val botReplyRepository = new BotReplyRepository(database)
-    lazy val botActionRepository = new BotActionRepository(database)
-    lazy val messengerUserRepository = new MessengerUserRepository(database)
+    lazy val botReplyRepo = new BotReplyRepository(database)
+    lazy val requestPatternRepo = new RequestPatternRepository(database)
+    lazy val messengerUserRepo = new MessengerUserRepository(database)
 
-    lazy val userService = new UserService(messengerUserRepository)
-    lazy val fBPageService = new FBPageService(accessToken)
+    lazy val userService = new UserService(messengerUserRepo)
+    lazy val fBPageService = new FBPageService(ChatiableServerConfig.accessToken)
+    lazy val botActionService = new UserRequsetService(requestPatternRepo)
+    lazy val botReplyService = new BotReplyService(botReplyRepo)
+    lazy val pvpChatService = new PVPChatService()
 
-    lazy val botReplyServer = new BotReplyServer(
+    lazy val botServer = new BotServer(
+      botActionService,
+      botReplyService,
+      pvpChatService,
       userService,
       fBPageService
     )
@@ -56,7 +64,7 @@ object ChatiableServer extends App {
     }
 
     lazy val routeHandlers = Seq(
-      botReplyServer
+      botServer
     )
 
     lazy val serverRoute = routeHandlers
@@ -74,9 +82,9 @@ object ChatiableServer extends App {
 
 //    Await.result(
 //      for {
-//        _ <- botReplyRepository.createSchema
-//        _ <- botActionRepository.createSchema
-//        _ <- messengerUserRepository.createSchema
+//        _ <- botReplyRepo.createSchema
+//        _ <- messengerUserRepo.createSchema
+//        _ <- requestPatternRepo.createSchema
 //      } yield(),
 //      Duration.Inf
 //    )

@@ -2,9 +2,8 @@ package chatiable.persistence.repository
 
 import java.sql.SQLIntegrityConstraintViolationException
 
-import chatiable.model.bot.BotAction
-import chatiable.persistence.table.BotActions
-import com.mysql.cj.jdbc.exceptions.MySQLQueryInterruptedException
+import chatiable.model.bot.RequestPattern
+import chatiable.persistence.table.RequestPatterns
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -13,13 +12,13 @@ import scala.concurrent.Future
 import slick.jdbc.MySQLProfile.api._
 // scalastyle:on underscore.import
 
-final class BotActionRepository(
+final class RequestPatternRepository(
   database: Database
 ) {
 
-  def add(ask: String, reply: String, propbabl: Int): Future[Unit] = {
+  def add(ask: String, reply: String): Future[Unit] = {
     database.run(DBIO.seq(
-      BotActions.query += BotAction(ask, reply)
+      RequestPatterns.query += RequestPattern(ask, reply)
     )).recoverWith{
       case uniqeEx: SQLIntegrityConstraintViolationException =>
         Future.successful(println("record already exists !"))
@@ -27,16 +26,16 @@ final class BotActionRepository(
     }
   }
 
-  def get: Future[Seq[BotAction]] = {
+  def get: Future[Seq[RequestPattern]] = {
     database
       .run {
-        BotActions.query.result
+        RequestPatterns.query.result
       }
   }
 
   def createSchema: Future[Unit] = {
     database.run(
-      BotActions.query.schema.create
+      RequestPatterns.query.schema.create
     )
   }
 
