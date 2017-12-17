@@ -15,25 +15,9 @@ import scala.util.Success
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.util.Failure
+import chatiable.utils.StringUtils._
 
-val list  = List()
 
-val thread1 = new Thread {
-  override def run: Unit = {
-    list.synchronized {
-      Thread.sleep(5000)
-      println("1")
-    }
-  }
-}
+val str = "ế ấ ụ"
 
-val thread2 = new Thread {
-  override def run: Unit = {
-    list.synchronized {
-      println("2")
-    }
-  }
-}
-
-thread1.start()
-thread2.start()
+str.withoutToneMarks()

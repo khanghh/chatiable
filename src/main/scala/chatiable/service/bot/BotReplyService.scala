@@ -14,6 +14,8 @@ import chatiable.server.ChatiableServerConfig
 import chatiable.service.facebook.FBHttpClient
 import chatiable.service.facebook.FBPageApi
 import chatiable.service.facebook.SenderActions
+import chatiable.service.math.CCHttpClient
+import chatiable.service.math.CocCocMathApi
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -28,9 +30,8 @@ final class BotReplyService(
 ) {
   val ramdom = new Random(System.currentTimeMillis())
 
-  def parsePlaceHolder(user: MessengerUser, reply: String): String = {
-    DateTime
-    reply
+  def parsePlaceHolder(user: MessengerUser, replyMsg: String): String = {
+    replyMsg
       .replaceAll(
         "\\$pronoun",
         if (user.gender) "anh" else "chị"
@@ -50,7 +51,7 @@ final class BotReplyService(
   }
 
   def handleMessage(user: MessengerUser, message: String): Future[Unit] = {
-    implicit val fbHttpClient = new FBHttpClient(ChatiableServerConfig.accessToken)
+    implicit val fbHttpClient: FBHttpClient = new FBHttpClient(ChatiableServerConfig.fbAccessToken)
     val teachPattern = """#addrep (.*)\|(.*)\|(.*)$""".r
     message match {
       case teachPattern(ask, rep, prob) =>
@@ -67,13 +68,28 @@ final class BotReplyService(
             getRandomBotReply(defaultReps)
           ) match {
             case Some(botReply) =>
-              val replyMsg = parsePlaceHolder(user, botReply.reply)
-              for {
-                _ <- FBPageApi.sendSenderAction(user.userId, SenderActions.TypingOn).map(_ => Thread.sleep(500))
-                _ <- FBPageApi.sendTextMessage(user.userId, replyMsg)
-                _ <- FBPageApi.sendSenderAction(user.userId, SenderActions.TypingOff)
-              } yield {
-                user.request = null
+              botReply.ask match {
+                case "*" =>
+                  implicit val ccHttpClient: CCHttpClient = new CCHttpClient()
+                  CocCocMathApi.getMathResult(message).flatMap { response =>
+                    response.math.variants match {
+                      case Some(variants) =>
+                        for {
+                          _ <- FBPageApi.sendTextMessage(user.userId, s"Bài toán: ${variants.head.texImage.replaced_formula}")
+                          _ <- FBPageApi.sendSenderAction(user.userId, SenderActions.TypingOn)
+                          _ <- FBPageApi.sendAttachment(user.userId, "image", variants.head.texUrl)
+                          _ <- FBPageApi.sendTextMessage(user.userId, s"Kết quả: ${variants.head.answers.head.replaced_formula}" )
+                          _ <- FBPageApi.sendSenderAction(user.userId, SenderActions.TypingOn)
+                          _ <- FBPageApi.sendAttachment(user.userId, "image", variants.head.answers.head.answer_url)
+                        } yield()
+                      case None =>
+                        val replyMsg: String = parsePlaceHolder(user, botReply.reply)
+                        sendReplyMessage(user, replyMsg)
+                    }
+                  }
+                case _ =>
+                  val replyMsg: String = parsePlaceHolder(user, botReply.reply)
+                  sendReplyMessage(user, replyMsg)
               }
             case None =>
               FBPageApi.sendTextMessage(user.userId, "không có dữ liệu")
@@ -89,5 +105,18 @@ final class BotReplyService(
       rnd = rnd - reply.probabl
       rnd <= 0
     })
+  }
+
+  def sendReplyMessage(
+    user: MessengerUser,
+    replyMsg: String
+  )(implicit fBHttpClient: FBHttpClient): Future[Unit] ={
+    for {
+      _ <- FBPageApi.sendSenderAction(user.userId, SenderActions.TypingOn).map(_ => Thread.sleep(500))
+      _ <- FBPageApi.sendTextMessage(user.userId, replyMsg)
+      _ <- FBPageApi.sendSenderAction(user.userId, SenderActions.TypingOff)
+    } yield {
+      user.request = null
+    }
   }
 }

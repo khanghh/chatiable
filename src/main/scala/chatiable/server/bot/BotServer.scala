@@ -4,14 +4,20 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import chatiable.model.user.MessengerUser
 import chatiable.model.user.request.UserRequest
+import chatiable.model.user.request.math.CocCocMathRequest
 import chatiable.model.user.request.pvpchat.PVPChatRequest
+import chatiable.model.user.request.weather.OpenWeatherRequest
 import chatiable.server.Server
 import chatiable.service.FBPageService
 import chatiable.service.bot.BotReplyService
 import chatiable.service.bot.UserRequsetService
 import chatiable.service.chatfuel.ChatfuelApi
+import chatiable.service.facebook.message.FBWebhooksService
+import chatiable.service.facebook.message.IncommingWebhooksMessage
+import chatiable.service.math.CCMathService
 import chatiable.service.user.PVPChatService
 import chatiable.service.user.UserService
+import chatiable.service.weather.OpenWeatherService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -21,8 +27,13 @@ final class BotServer(
   botReplyService: BotReplyService,
   pvpChatService: PVPChatService,
   userService: UserService,
-  fbPageService: FBPageService
+  fbPageService: FBPageService,
+  fbWebhooksService: FBWebhooksService,
+  ccMathService: CCMathService,
+  openWeatherService: OpenWeatherService
 ) extends Server {
+
+  fbWebhooksService.setProcessMessage(handleWebhooksMessage)
 
   override def route: Route =
     path("message") {
@@ -42,6 +53,16 @@ final class BotServer(
         }
       }
     }
+
+  private[this] def handleWebhooksMessage(
+    webhooksMessage: IncommingWebhooksMessage
+  ): Future[Unit] = {
+    Future()
+//    for {
+//      user <- getUser(userId, message)
+//      _ <- handleMessage(user, message)
+//    } yield ()
+  }
 
   private[this] def getUser(userId: String, message: String): Future[MessengerUser] = {
     userService.getUser(userId).flatMap {
@@ -75,13 +96,15 @@ final class BotServer(
     if (deltaTime > 1000) {
       for {
         _ <- userRequsetService.handleAddPattern(user, message)
-        _ <- getUserRequest(user, message).map {
+        _ <- getUserRequest(user, message).flatMap {
           case req: PVPChatRequest =>
             pvpChatService.handleMessage(user, message)
+          case req: CocCocMathRequest =>
+            ccMathService.handleMessage(user, message)
+          case req: OpenWeatherRequest =>
+            openWeatherService.handleMessage(user, message)
           case _ =>
             botReplyService.handleMessage(user, message)
-        }.recoverWith {
-          case ex: Throwable => Future.failed(ex)
         }
       } yield ()
     } else {

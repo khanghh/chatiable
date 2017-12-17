@@ -29,7 +29,7 @@ final class PVPChatService(
   }
 
   private[this] def handleNewChat(user: MessengerUser, message: String): Future[_] = {
-    implicit val fBHttpClient: FBHttpClient = new FBHttpClient(ChatiableServerConfig.accessToken)
+    implicit val fBHttpClient: FBHttpClient = new FBHttpClient(ChatiableServerConfig.fbAccessToken)
     user.request = SelectGender()
     for {
       _ <- FBPageApi.sendSenderAction(user.userId, SenderActions.TypingOn).map(_ => Thread.sleep(1000))
@@ -39,7 +39,7 @@ final class PVPChatService(
   }
 
   private[this] def handleSelectGender(user: MessengerUser, message: String): Future[_] = {
-    implicit val fBHttpClient: FBHttpClient = new FBHttpClient(ChatiableServerConfig.accessToken)
+    implicit val fBHttpClient: FBHttpClient = new FBHttpClient(ChatiableServerConfig.fbAccessToken)
     message match {
       case "Boy" =>
         handleSelectedBoy(user, message)
@@ -60,7 +60,7 @@ final class PVPChatService(
   }
 
   private[this] def handleFindingFriend(user: MessengerUser, message: String): Future[_] = {
-    implicit val fBHttpClient: FBHttpClient = new FBHttpClient(ChatiableServerConfig.accessToken)
+    implicit val fBHttpClient: FBHttpClient = new FBHttpClient(ChatiableServerConfig.fbAccessToken)
     message match {
       case "bye" =>
         stopPair(user)
@@ -74,7 +74,7 @@ final class PVPChatService(
   }
 
   private[this] def handlePairing(user: MessengerUser, message: String): Future[_] = {
-    implicit val fBHttpClient: FBHttpClient = new FBHttpClient(ChatiableServerConfig.accessToken)
+    implicit val fBHttpClient: FBHttpClient = new FBHttpClient(ChatiableServerConfig.fbAccessToken)
     val friend = user.request.asInstanceOf[Pairing].friend
     message match {
       case url if message.matches("\\S+") && (message.startsWith("http://") || message.startsWith("https://")) =>
@@ -104,7 +104,7 @@ final class PVPChatService(
   }
 
   private[this] def startPair(user: MessengerUser, userSelectedGender: Boolean): Future[_] = {
-    implicit val fBHttpClient: FBHttpClient = new FBHttpClient(ChatiableServerConfig.accessToken)
+    implicit val fBHttpClient: FBHttpClient = new FBHttpClient(ChatiableServerConfig.fbAccessToken)
     UserManager.onlineUsers.synchronized {
       UserManager.onlineUsers.find { friend =>
         friend.request match {

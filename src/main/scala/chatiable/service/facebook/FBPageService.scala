@@ -52,7 +52,7 @@ final class FBPageService(
   def sendQuickReplies(
     userId: String,
     text: String,
-    replies: String*
+    replies: List[String]
   ): Future[FBSendQuickRepliesMessageResponse] = {
     fbHttpClient.request[FBSendQuickRepliesMessageRequest, FBSendQuickRepliesMessageResponse](
       HttpMethods.POST,
@@ -61,7 +61,7 @@ final class FBPageService(
         FBSendQuickRepliesMessageRequest.ContactInfo(userId),
         FBSendQuickRepliesMessageRequest.Message(
           text,
-          replies.map(FBSendQuickRepliesMessageRequest.Message.QuickReply("text", _, "POSTBACK_PAYLOAD")).toList
+          replies.map(FBSendQuickRepliesMessageRequest.Message.QuickReply("text", _, "POSTBACK_PAYLOAD"))
         )
       )
     )
