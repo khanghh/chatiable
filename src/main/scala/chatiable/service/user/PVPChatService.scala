@@ -8,6 +8,8 @@ import chatiable.server.ChatiableServerConfig
 import chatiable.service.facebook.FBHttpClient
 import chatiable.service.facebook.FBPageApi
 import chatiable.service.facebook.SenderActions
+import chatiable.service.facebook.message.IncommingWebhooksMessage.Entry.Message
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

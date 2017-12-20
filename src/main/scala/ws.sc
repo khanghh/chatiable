@@ -1,5 +1,6 @@
 
 import java.net.URL
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -16,8 +17,21 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.util.Failure
 import chatiable.utils.StringUtils._
+import java.time.LocalDate
+
+import org.joda.time.DateTimeZone
+import org.joda.time.format.DateTimeFormat
 
 
-val str = "ế ấ ụ"
+val pattern = "thời tiết (.+) (hôm nay|ngày mai|ngày .+)$".r
 
-str.withoutToneMarks()
+val str = "thời tiết hà nội ngày 1215-1-12"
+
+str match {
+  case pattern(param1, param2) =>
+    println(param1)
+    println(param2)
+  case _ => println("none")
+}
+
+DateTimeFormat.forPattern("dd/MM/yyyy").withZone(DateTimeZone.getDefault).print(System.currentTimeMillis())

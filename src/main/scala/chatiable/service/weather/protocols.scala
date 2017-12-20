@@ -32,7 +32,7 @@ object OpenWeatherGetForecastResponse {
 
   final case class WeatherDayInfo(
     dt: Long,
-    temp: List[Temperatures],
+    temp: Temperatures,
     pressure: Float,
     humidity: Float,
     weather: List[WeatherDayInfo.WeatherDescription],

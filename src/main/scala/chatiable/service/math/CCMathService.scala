@@ -45,13 +45,5 @@ final class CCMathService(
           }
         }
     }
-    CocCocMathApi.getMathResult(message).flatMap { response =>
-      response.math.variants match {
-        case None =>
-          FBPageApi.sendTextMessage(user.userId, response.math.variants.get.head.answers.head.replaced_formula)
-        case Some(error) =>
-          Future.successful()
-      }
-    }
   }
 }

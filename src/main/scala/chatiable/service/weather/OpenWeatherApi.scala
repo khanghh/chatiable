@@ -28,7 +28,8 @@ object OpenWeatherApi {
       Map(
         "q" -> city,
         "lang" -> "vi",
-        "units" -> "metric"
+        "units" -> "metric",
+        "cnt" -> "16"
       )
     )
   }

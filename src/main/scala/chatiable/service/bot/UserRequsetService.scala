@@ -44,22 +44,25 @@ final class UserRequsetService(
           .findAllIn(message.toLowerCase()).toList.nonEmpty
       } match {
         case Some(reqPattern) =>
+          println(message)
+          println(reqPattern.askPattern)
           val groups = reqPattern.askPattern.r.findAllIn(message.toLowerCase()).subgroups
           reqPattern.request match {
             case "pvp_newchat" => PVPChatRequest.NewChat()
             case "pvp_selectedgirl" => PVPChatRequest.SelectedBoy()
             case "pvp_selectedboy" => PVPChatRequest.SelectedGirl()
-            case "weather_newcheck" => OpenWeatherRequest.NewCheckWeather()
-            case "weather_getforecast" => OpenWeatherRequest.GetForecast(groups.head)
-            case "weather_getcurrent" => OpenWeatherRequest.GetCurrentWeather(groups.head)
-            case "weather_getbydate" => OpenWeatherRequest.GetWeatherByDate(groups.head, groups.last)
             case "math_newsolve" => CocCocMathRequest.NewSolveMath()
+            case "weather_newcheck" => OpenWeatherRequest.NewCheckWeather()
+            case "weather_getcurrent" => OpenWeatherRequest.GetCurrentWeather(groups.head)
+            case "weather_getbydate" => OpenWeatherRequest.GetForecastByDate(groups.head, groups.last)
           }
         case None =>
           BotReplyRequest()
       }
     })
   }
+
+
 
 
 }

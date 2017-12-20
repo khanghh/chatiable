@@ -14,6 +14,7 @@ import chatiable.service.bot.UserRequsetService
 import chatiable.service.chatfuel.ChatfuelApi
 import chatiable.service.facebook.message.FBWebhooksService
 import chatiable.service.facebook.message.IncommingWebhooksMessage
+import chatiable.service.facebook.message.IncommingWebhooksMessage.Entry.Message
 import chatiable.service.math.CCMathService
 import chatiable.service.user.PVPChatService
 import chatiable.service.user.UserService
@@ -44,7 +45,7 @@ final class BotServer(
         ) { (message, userId) =>
           complete {
             for {
-              user <- getUser(userId, message)
+              user <- getUser(userId)
               _ <- handleMessage(user, message)
             } yield {
               ChatfuelApi.sendSilent
@@ -54,17 +55,26 @@ final class BotServer(
       }
     }
 
+
   private[this] def handleWebhooksMessage(
     webhooksMessage: IncommingWebhooksMessage
   ): Future[Unit] = {
+//    def processMessage(listMsg: Seq[IncommingWebhooksMessage.Entry.Messaging]): Future[Unit] = {
+//      listMsg match {
+//        case messaging :: tail =>
+//          getUser(messaging.sender.id).flatMap { user =>
+//            handleMessage(user, messaging.message)
+//          }.flatMap(_ => processMessage(tail))
+//        case Seq() =>
+//          Future.successful()
+//      }
+//    }
+//
+//    processMessage(webhooksMessage.entry.head.messaging)
     Future()
-//    for {
-//      user <- getUser(userId, message)
-//      _ <- handleMessage(user, message)
-//    } yield ()
   }
 
-  private[this] def getUser(userId: String, message: String): Future[MessengerUser] = {
+  private[this] def getUser(userId: String): Future[MessengerUser] = {
     userService.getUser(userId).flatMap {
       case Some(user) => Future(user)
       case None =>

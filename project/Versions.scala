@@ -21,4 +21,6 @@ object Versions {
   lazy val ScalajHttp = "2.3.0"
 
   lazy val Slf4jNop = "1.7.25"
+
+  lazy val JodaTime = "2.9.9"
 }
